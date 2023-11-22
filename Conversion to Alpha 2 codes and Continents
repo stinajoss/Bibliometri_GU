@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+import psycopg2
+from pycountry_convert import country_name_to_country_alpha2, country_alpha2_to_continent_code
+
+# PostgreSQL credentials
+dbname = ' '
+user = ' '
+password = ' '
+host = ' '
+port = ' '
+
+# Function to convert to alpha-2 country codes and continents
+def get_continent(row):
+    try:
+        cn_a2_code = country_name_to_country_alpha2(row['country'])
+    except:
+        cn_a2_code = 'Unknown'
+    try:
+        cn_continent = country_alpha2_to_continent_code(cn_a2_code)
+    except:
+        cn_continent = 'Unknown'
+    return pd.Series({'Alpha2_Code': cn_a2_code, 'Continent': cn_continent})
+
+# Establishing a connection to the PostgreSQL database
+with psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port) as conn:
+    # Example query to retrieve data from the database
+    query = """
+        SELECT 
+    COUNT(DISTINCT ia.isi_id) AS distinct_count,
+    CASE
+        WHEN ia.country = 'Sweden;' THEN 'Sweden'
+        WHEN ia.country = 'Scotland' OR ia.country = 'England' OR ia.country = 'Wales' OR ia.country = 'North Ireland' THEN 'United Kingdom'
+        WHEN ia.country = 'U Arab Emirates' THEN 'United Arab Emirates'
+        WHEN ia.country = 'Bosnia & Herceg' THEN 'Bosnia and Herzegovina'
+        WHEN ia.country = 'DEM REP CONGO' THEN 'Democratic Republic of the Congo'
+        WHEN ia.country = 'Cote Ivoire' THEN 'Ivory Coast'
+        WHEN ia.country = 'Dominican Rep' THEN 'Dominican Republic'
+        WHEN ia.country = 'BELARUS' THEN 'Belarus'
+        WHEN ia.country = 'Turkiye' THEN 'Turkey'
+        WHEN ia.country = 'Cent Afr Republ' THEN 'Central African Republic'
+        WHEN ia.country = 'Rep Congo' THEN 'Congo'
+        WHEN ia.country = 'Guinea Bissau' THEN 'Guinea-Bissau'
+        WHEN ia.country = 'St Lucia' THEN 'Saint Lucia'
+        WHEN ia.country = 'Equat Guinea' THEN 'Equatorial Guinea'
+        WHEN ia.country = 'Papua N Guinea'  THEN 'Papua New Guinea'
+        WHEN ia.country= 'Trinidad Tobago' THEN 'Trinidad and Tobago'
+        ELSE ia.country
+    END AS country
+FROM 
+    extra.isi_address AS ia
+    JOIN extra.isi_main AS im ON ia.isi_id = im.isi_id
+WHERE 
+    ia.country <> 'Sweden'
+    AND ia.country <> 'Kosovo'
+    AND im.py_field in ('2018','2019','2020','2021','2022')
+GROUP BY 
+    ia.country
+ORDER BY 
+    distinct_count DESC;
+    """
+    # Fetching the results into a Pandas DataFrame
+    df = pd.read_sql(query, conn)
+
+    # Apply the get_continent function to create 'Alpha2_Code' and 'Continent' columns
+    df[['Alpha2_Code', 'Continent']] = df.apply(get_continent, axis=1)
+
+    # Display the entire DataFrame
+    pd.set_option("display.max_rows", None, "display.max_columns", None)
+    print(df)
