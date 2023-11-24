@@ -1,0 +1,277 @@
+SELECT * FROM
+(SELECT distinct p.id AS PUBID, pv.pubyear AS PUBYEAR, pt.label_sv AS PUBTYPE, 
+CASE WHEN pt.id = 1 THEN 'Konferensbidrag'
+WHEN pt.id = 2 THEN 'Paper i proceeding'
+WHEN pt.id = 5 THEN 'Artikel i vetenskaplig tidskrift'
+WHEN pt.id = 8 THEN 'Samlingsverk (redaktörskap)'
+WHEN pt.id = 9 THEN 'Bok'
+WHEN pt.id = 10 THEN 'kapitel i bok'
+WHEN pt.id = 17 THEN 'Doktorsavhandling'
+WHEN pt.id = 22 THEN 'Forskningsöversiktsartikel'
+WHEN pt.id = 34 THEN 'Konstnärligt arbete'
+ELSE 'Övriga publikationer'
+END AS DOCTYPE,
+f.name_sv AS FACULTY,
+(select di.name_sv from departments di where di.id = d.inst_id) AS DEPARTMENT, 
+l.update_level AS LEVEL,
+im.isi_ID AS UT,
+(CASE 
+WHEN im.oa_field LIKE '%gold%' THEN 1
+WHEN im.oa_field LIKE '%green%' THEN 1
+WHEN im.oa_field LIKE '%Green%' THEN 1
+WHEN im.oa_field LIKE '%hybrid%' THEN 1
+WHEN im.oa_field LIKE '%Gold%' THEN 1
+WHEN im.oa_field LIKE '%Hybrid%' THEN 1
+WHEN im.oa_field LIKE '%bronze%' THEN 1
+WHEN im.oa_field LIKE '%Bronze%' THEN 1
+WHEN im.oa_field LIKE '%Hybrid%' THEN 1       
+END) AS OA,
+pv.title AS TITLE, 
+pv.keywords AS KEYWORDS,
+pv.abstract AS ABSTRACT
+FROM publications p JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN publication_types pt ON pt.id=pv.publication_type_id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d On d.id = d2p2p.department_id
+JOIN faculties f ON f.id=d.faculty_id
+LEFT OUTER JOIN legnor.master_2023 l           ON l.pubid=p.id
+LEFT OUTER JOIN "cross".gup2ext g2 ON g2.pubid = p.id
+LEFT OUTER JOIN "extra".isi_main im ON im.isi_id=g2.isi_id
+WHERE p.deleted_at IS NULL
+AND p.published_at IS NOT NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND d2p2p.department_id not in (666)
+AND d2p2p.department_id not in (371,390,391)
+
+UNION 
+
+SELECT distinct p.id AS PUBID, pv.pubyear AS PUBYEAR, pt.label_sv AS PUBTYPE, 
+CASE WHEN pt.id = 1 THEN 'Konferensbidrag'
+WHEN pt.id = 2 THEN 'Paper i proceeding'
+WHEN pt.id = 5 THEN 'Artikel i vetenskaplig tidskrift'
+WHEN pt.id = 8 THEN 'Samlingsverk (redaktörskap)'
+WHEN pt.id = 9 THEN 'Bok'
+WHEN pt.id = 10 THEN 'kapitel i bok'
+WHEN pt.id = 17 THEN 'Doktorsavhandling'
+WHEN pt.id = 22 THEN 'Forskningsöversiktsartikel'
+WHEN pt.id = 34 THEN 'Konstnärligt arbete'
+ELSE 'Övriga publikationer'
+END AS DOCTYPE,
+f.name_sv AS FACULTY,
+(select di.name_sv from departments di where di.id = d.inst_id) AS DEPARTMENT, 
+l.update_level AS LEVEL,
+im.isi_ID AS UT,
+(CASE 
+WHEN im.oa_field LIKE '%gold%' THEN 1
+WHEN im.oa_field LIKE '%green%' THEN 1
+WHEN im.oa_field LIKE '%Green%' THEN 1
+WHEN im.oa_field LIKE '%hybrid%' THEN 1
+WHEN im.oa_field LIKE '%Gold%' THEN 1
+WHEN im.oa_field LIKE '%Hybrid%' THEN 1
+WHEN im.oa_field LIKE '%bronze%' THEN 1
+WHEN im.oa_field LIKE '%Bronze%' THEN 1
+WHEN im.oa_field LIKE '%Hybrid%' THEN 1       
+END) AS OA,
+pv.title AS TITLE, 
+pv.keywords AS KEYWORDS,
+pv.abstract AS ABSTRACT
+FROM publications p JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN publication_types pt ON pt.id=pv.publication_type_id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d On d.id = d2p2p.department_id
+JOIN faculties f ON f.id=d.faculty_id
+LEFT OUTER JOIN legnor.master_2023 l           ON l.pubid=p.id
+LEFT OUTER JOIN "cross".gup2ext g2 ON g2.pubid = p.id
+LEFT OUTER JOIN "extra".isi_main im ON im.isi_id=g2.isi_id
+WHERE p.deleted_at IS NULL
+AND p.published_at IS NOT NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND d2p2p.department_id in (371,390,391)
+AND p2p.person_id IN (160387,84204,85193,183846,263407,156779,15395,20514,920,83001,20522,243794,152535,20518,122,2230,155673,240502,213161,
+178298,179836,497951,448843,15891,77141,18377,152727,81177,176655,635533,83456,7663,125272,145601,78396,175708,84432,173047,
+81331,85213,206571,163062,157250,428803,113731,107072,82037,117772,77164,156002,77279,133747,77297,6456,270245,125121,77306,
+204170,250821,84371,77278,94680,19835,77275,21717,20866,80763,156933,105654,544478,124425,220822,77148,77129,120486,92471,
+125271,124623,819715,266137,670889,206722,309079,316533,316536,635655,813918,744493,273192,614552,614553,766456,253002,
+810131,222444,763689,815383,220822,245010,105654,124623,199157,497951,546173,806995,819715,823714,826103,832502,871731,893260,884836,915480,184179,905890,4388,818100,836988,875122,921310,857746,1061914,1056322,11270,380852,942118 )
+)tbl_master
+
+LEFT OUTER JOIN
+
+(SELECT distinct p.id AS PUBID, pv.pubyear AS PUBYEAR,
+f.name_sv AS FACULTY,
+(select di.name_sv from departments di where di.id = d.inst_id) AS DEPARTMENT,
+fd."c*",  fd."fc*s", fd."jc*s", fd."n*%"
+FROM publications p JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN reorg.departments r ON r.deptid = d2p2p.department_id
+JOIN departments d ON d.id = r.currdeptid
+JOIN faculties f ON f.id=d.faculty_id
+JOIN "cross".gup2ext c ON c.pubid = p.id
+JOIN cwts.fielddata fd ON fd.isi_id =c.isi_id 
+WHERE p.deleted_at IS NULL
+AND fd.year = (2023-pv.pubyear)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND pv.publication_type_id IN (2,5,22)
+AND d.id NOT IN (371,390,391, 1957, 1958, 1959)
+UNION
+SELECT distinct p.id AS PUBID, pv.pubyear AS PUBYEAR,
+f.name_sv AS FACULTY,
+(select di.name_sv from departments di where di.id = d.inst_id) AS DEPARTMENT,
+fd."c*",  fd."fc*s", fd."jc*s", fd."n*%"
+FROM publications p JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN reorg.departments r ON r.deptid = d2p2p.department_id
+JOIN departments d ON d.id = r.currdeptid
+JOIN faculties f ON f.id=d.faculty_id
+JOIN "cross".gup2ext c ON c.pubid = p.id
+JOIN cwts.fielddata fd ON fd.isi_id =c.isi_id 
+WHERE p.deleted_at IS NULL
+AND fd.year = (2023-pv.pubyear)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND pv.publication_type_id IN (2,5,22)
+AND d2p2p.department_id in (371,390,391,1957, 1958, 1959)
+AND p2p.person_id IN (160387,84204,85193,183846,263407,156779,15395,20514,920,83001,20522,243794,152535,20518,122,2230,155673,240502,213161,
+178298,179836,497951,448843,15891,77141,18377,152727,81177,176655,635533,83456,7663,125272,145601,78396,175708,84432,173047,
+81331,85213,206571,163062,157250,428803,113731,107072,82037,117772,77164,156002,77279,133747,77297,6456,270245,125121,77306,
+204170,250821,84371,77278,94680,19835,77275,21717,20866,80763,156933,105654,544478,124425,220822,77148,77129,120486,92471,
+125271,124623,819715,266137,670889,206722,309079,316533,316536,635655,813918,744493,273192,614552,614553,766456,253002,
+810131,222444,763689,815383,220822,245010,105654,124623,199157,497951,546173,806995,819715,823714,826103,832502,871731,893260,884836,915480,184179,905890,4388,818100,836988,875122,921310,857746,1061914,1056322,11270,380852,942118 )
+) tbl_cit
+On tbl_master.pubid=tbl_cit.pubid
+
+LEFT OUTER JOIN
+
+--international co-authorship
+(SELECT distinct p.id AS int, 
+CASE when p.id>= 10 then 1 END
+FROM extra.isi_main im
+JOIN extra.isi_address ia ON ia.isi_id=im.isi_id
+JOIN "cross".gup2ext g2e ON g2e.isi_id=im.isi_id
+JOIN publications p ON g2e.pubid=p.id
+JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN identifiers i ON i.person_id=pe.id
+WHERE p.deleted_at IS NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND i.source_id = 1
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND p.id in (
+SELECT p.id
+FROM publications p
+JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+WHERE p.deleted_at IS NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND (d.id = 666)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND d.id NOT IN (371,390,391, 1957, 1958, 1959)
+)
+AND im.isi_id IN (
+SELECT isi_id FROM extra.isi_address WHERE country != 'Sweden')
+UNION
+SELECT distinct p.id AS int,
+CASE when p.id>= 10 then 1 END
+FROM extra.isi_main im
+JOIN extra.isi_address ia ON ia.isi_id=im.isi_id
+JOIN "cross".gup2ext g2e ON g2e.isi_id=im.isi_id
+JOIN publications p ON g2e.pubid=p.id
+JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN identifiers i ON i.person_id=pe.id
+WHERE p.deleted_at IS NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND i.source_id = 1
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND p.id in (
+SELECT p.id
+FROM publications p
+JOIN publication_versions pv ON pv.id=p.current_version_id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+WHERE p.deleted_at IS NULL
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND (d.id = 666)
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND d.id in (371,390,391,1957, 1958, 1959)
+AND p2p.person_id IN (160387,84204,85193,183846,263407,156779,15395,20514,920,83001,20522,243794,152535,20518,122,2230,155673,240502,213161,
+178298,179836,497951,448843,15891,77141,18377,152727,81177,176655,635533,83456,7663,125272,145601,78396,175708,84432,173047,
+81331,85213,206571,163062,157250,428803,113731,107072,82037,117772,77164,156002,77279,133747,77297,6456,270245,125121,77306,
+204170,250821,84371,77278,94680,19835,77275,21717,20866,80763,156933,105654,544478,124425,220822,77148,77129,120486,92471,
+125271,124623,819715,266137,670889,206722,309079,316533,316536,635655,813918,744493,273192,614552,614553,766456,253002,
+810131,222444,763689,815383,220822,245010,105654,124623,199157,497951,546173,806995,819715,823714,826103,832502,871731,893260,884836,915480,184179,905890,4388,818100,836988,875122,921310,857746,1061914,1056322,11270,380852,942118 )
+) 
+AND im.isi_id IN (
+SELECT isi_id FROM extra.isi_address WHERE country != 'Sweden')) tbl_int
+ON tbl_master.pubid=tbl_int.int
+
+LEFT OUTER JOIN
+--external co-authorship
+(SELECT distinct p.id as ext,
+CASE when p.id>= 10 then 1 END
+FROM publications p
+JOIN publication_versions pv ON pv.id = p.current_version_id
+JOIN publication_types pt ON pv.publication_type_id=pt.id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+JOIN faculties f ON f.id=d.faculty_id
+WHERE p.deleted_at IS NULL
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND d.id NOT IN (371,390,391, 1957, 1958, 1959)
+AND p.id IN ( 
+SELECT p1.id 
+FROM publications p1
+JOIN publication_versions pv1 ON pv1.id=p1.current_version_id
+JOIN people2publications p2p1 ON p2p1.publication_version_id=pv1.id
+JOIN departments2people2publications d2p2p1 ON d2p2p1.people2publication_id=p2p1.id
+WHERE d2p2p1.department_id = '666')
+UNION
+SELECT distinct p.id as ext,
+CASE when p.id>= 10 then 1 END
+FROM publications p
+JOIN publication_versions pv ON pv.id = p.current_version_id
+JOIN publication_types pt ON pv.publication_type_id=pt.id
+JOIN people2publications p2p ON p2p.publication_version_id=pv.id
+JOIN people pe ON pe.id=p2p.person_id
+JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id=p2p.id
+JOIN departments d ON d.id=d2p2p.department_id
+JOIN faculties f ON f.id=d.faculty_id
+WHERE p.deleted_at IS NULL
+AND pv.pubyear BETWEEN 2018 AND 2022
+AND (p.process_state NOT IN ('DRAFT', 'PREDRAFT') OR p.process_state IS NULL)
+AND d.id in (371,390,391,1957, 1958, 1959)
+AND p2p.person_id IN (160387,84204,85193,183846,263407,156779,15395,20514,920,83001,20522,243794,152535,20518,122,2230,155673,240502,213161,
+178298,179836,497951,448843,15891,77141,18377,152727,81177,176655,635533,83456,7663,125272,145601,78396,175708,84432,173047,
+81331,85213,206571,163062,157250,428803,113731,107072,82037,117772,77164,156002,77279,133747,77297,6456,270245,125121,77306,
+204170,250821,84371,77278,94680,19835,77275,21717,20866,80763,156933,105654,544478,124425,220822,77148,77129,120486,92471,
+125271,124623,819715,266137,670889,206722,309079,316533,316536,635655,813918,744493,273192,614552,614553,766456,253002,
+810131,222444,763689,815383,220822,245010,105654,124623,199157,497951,546173,806995,819715,823714,826103,832502,871731,893260,884836,915480,184179,905890,4388,818100,836988,875122,921310,857746,1061914,1056322,11270,380852,942118)
+AND p.id IN ( 
+SELECT p1.id 
+FROM publications p1
+JOIN publication_versions pv1 ON pv1.id=p1.current_version_id
+JOIN people2publications p2p1 ON p2p1.publication_version_id=pv1.id
+JOIN departments2people2publications d2p2p1 ON d2p2p1.people2publication_id=p2p1.id
+WHERE d2p2p1.department_id = '666'))tbl_ext
+ON tbl_master.pubid=tbl_ext.ext
