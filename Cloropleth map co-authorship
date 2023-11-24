@@ -2,7 +2,8 @@ import pandas as pd
 import geopandas as gpd
 import folium
 import psycopg2
- 
+from folium import plugins
+
 # Establishing a connection to the PostgreSQL database
 dbname = '-'
 user = '-'
@@ -43,34 +44,35 @@ with psycopg2.connect(dbname=dbname, user=user, password=password, host=host, po
         WHERE 
             ia.country <> 'Sweden'
             AND ia.country <> 'Kosovo'
-            AND im.py_field in ('2018','2019','2020','2021','2022')
+            AND im.py_field= '2022'
         GROUP BY 
             ia.country
         ORDER BY 
             distinct_count DESC;
     """
+
 # Fetching the results into a Pandas DataFrame
 df = pd.read_sql(query, conn)
- 
-#Displaying dataframe
+
+# Displaying the dataframe
 display(df)
- 
+
 # Load the world map GeoDataFrame directly from Natural Earth data
 world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
- 
+
 # Merge your DataFrame with the GeoDataFrame
 merged = world.merge(df, how='left', left_on='name', right_on='country')
- 
+
 # Fill NaN values (countries without data) with a default value
 merged['distinct_count'].fillna(0, inplace=True)
- 
+
 # Ensure the 'distinct_count' column is numeric
 merged['distinct_count'] = pd.to_numeric(merged['distinct_count'], errors='coerce')
- 
+
 # Create a Folium map centered at the mean coordinates
 map_center = [merged.geometry.centroid.y.mean(), merged.geometry.centroid.x.mean()]
 m = folium.Map(location=map_center, zoom_start=2)
- 
+
 # Add choropleth layer to the map
 folium.Choropleth(
     geo_data=merged,
@@ -83,7 +85,7 @@ folium.Choropleth(
     line_opacity=0.2,
     legend_name='Distinct Counts by Country'
 ).add_to(m)
- 
+
 # Add a hover effect to display information about the country
 style_function = lambda x: {'fillColor': '#ffffff', 'color': '#000000', 'fillOpacity': 0.1, 'weight': 0.1}
 highlight_function = lambda x: {'fillColor': '#000000', 'color': '#000000', 'fillOpacity': 0.50, 'weight': 0.1}
@@ -93,12 +95,9 @@ info = folium.features.GeoJson(merged, style_function=style_function, control=Fa
     localize=True,
     sticky=True,
 )).add_to(m)
- 
-# Create a separate HTML table for the frequency table
-freq_table_html = df.to_html(classes='table table-striped table-hover table-condensed')
- 
-# Add a custom HTML element with the frequency table below the map
-folium.Html(freq_table_html, script=True).add_to(m)
- 
+
+# Add mouse position plugin
+plugins.MousePosition().add_to(m)
+
 # Show the map
 m
