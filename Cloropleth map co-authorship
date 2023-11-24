@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import psycopg2
 from pycountry_convert import country_name_to_country_alpha2, country_alpha2_to_continent_code
