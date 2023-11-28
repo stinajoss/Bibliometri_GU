@@ -7,38 +7,47 @@ from IPython.display import display  # Import the display function
 from folium import plugins
 
 # Your PostgreSQL connection details
-dbname = 'bibmet'
+dbname = '-'
 user = 'bibmetuser'
-password = 'MildaMakaroner'
-host = 'metrics.ub.gu.se'
-port = '5432'
+password = '-'
+host = '-'
+port = '-'
 
 # SQL Query to fetch data (excluding Sweden and Kosovo)
 sql_query = """
     SELECT  
-        COUNT(DISTINCT isi.isi_id) AS distinct_count,
-        CASE
-            WHEN ad.country = 'Scotland' OR ad.country = 'England' OR ad.country = 'Wales' OR ad.country = 'North Ireland' THEN 'United Kingdom'
-            WHEN ad.country = 'Sweden;' THEN 'Sweden'
-            WHEN ad.country = 'U Arab Emirates' THEN 'United Arab Emirates'
-            WHEN ad.country = 'Bosnia & Herceg' THEN 'Bosnia and Herzegovina'
-            WHEN ad.country = 'DEM REP CONGO' THEN 'Democratic Republic of the Congo'
-            WHEN ad.country = 'Cote Ivoire' THEN 'Ivory Coast'
-            WHEN ad.country = 'Dominican Rep' THEN 'Dominican Republic'
-            WHEN ad.country = 'BELARUS' THEN 'Belarus'
-            WHEN ad.country = 'Turkiye' THEN 'Turkey'
-            WHEN ad.country = 'Cent Afr Republ' THEN 'Central African Republic'
-            WHEN ad.country = 'Rep Congo' THEN 'Congo'
-            WHEN ad.country = 'Guinea Bissau' THEN 'Guinea-Bissau'
-            WHEN ad.country = 'St Lucia' THEN 'Saint Lucia'
-            WHEN ad.country = 'Equat Guinea' THEN 'Equatorial Guinea'
-            WHEN ad.country = 'Papua N Guinea' THEN 'Papua New Guinea'
-            WHEN ad.country = 'Trinidad Tobago' THEN 'Trinidad and Tobago'
-            WHEN ad.country = 'USA' THEN 'United States of America'
-            WHEN ad.country = 'Czech Republic' THEN 'Czechia'
-            -- Add more country mappings as needed
-            ELSE ad.country
-        END AS country
+    COUNT(DISTINCT isi.isi_id) AS distinct_count,
+    CASE
+        WHEN ad.country = 'Scotland' OR ad.country = 'England' OR ad.country = 'Wales' OR ad.country = 'North Ireland' THEN 'United Kingdom'
+        WHEN ad.country = 'Sweden;' THEN 'Sweden'
+        WHEN ad.country = 'U Arab Emirates' THEN 'United Arab Emirates'
+        WHEN ad.country = 'Bosnia & Herceg' THEN 'Bosnia and Herzegovina'
+        WHEN ad.country = 'DEM REP CONGO' THEN 'Democratic Republic of the Congo'
+        WHEN ad.country = 'Cote Ivoire' THEN 'Ivory Coast'
+        WHEN ad.country = 'Dominican Rep' THEN 'Dominican Republic'
+        WHEN ad.country = 'BELARUS' THEN 'Belarus'
+        WHEN ad.country = 'Turkiye' THEN 'Turkey'
+        WHEN ad.country = 'Cent Afr Republ' THEN 'Central African Republic'
+        WHEN ad.country = 'Rep Congo' THEN 'Congo'
+        WHEN ad.country = 'Guinea Bissau' THEN 'Guinea-Bissau'
+        WHEN ad.country = 'St Lucia' THEN 'Saint Lucia'
+        WHEN ad.country = 'Equat Guinea' THEN 'Equatorial Guinea'
+        WHEN ad.country = 'Papua N Guinea' THEN 'Papua New Guinea'
+        WHEN ad.country = 'Trinidad Tobago' THEN 'Trinidad and Tobago'
+        WHEN ad.country = 'USA' THEN 'United States of America'
+        WHEN ad.country = 'Czech Republic' THEN 'Czechia'
+        WHEN ad.country = 'Bosnia and Herzegovina' THEN 'Bosnia and Herz.'
+        WHEN ad.country = 'Central African Republic' THEN 'Central African Rep.'
+        WHEN ad.country = 'Democratic Republic of the Congo' THEN 'Dem. Rep. Congo'
+        WHEN ad.country = 'Dominican Republic' THEN 'Dominican Rep.'
+        WHEN ad.country = 'Equatorial Guinea' THEN 'Eq. Guinea'
+        WHEN ad.country = 'Eswatini' THEN 'eSwatini'
+        WHEN ad.country = 'Ivory Coast' THEN 'Côte d''Ivoire' -- Escape the single quote
+        WHEN ad.country = 'Solomon Islands' THEN 'Solomon Is.'
+        WHEN ad.country = 'South Sudan' THEN 'S. Sudan'
+        -- Add more country mappings as needed
+        ELSE ad.country
+    END AS country
     FROM publications p
     JOIN publication_versions pv ON pv.id = p.current_version_id
     JOIN people2publications p2p ON p2p.publication_version_id = pv.id
@@ -53,7 +62,7 @@ sql_query = """
         AND p.published_at IS NOT NULL
         AND isi.py_field IN ('2018', '2019', '2020', '2021', '2022')
         AND f.name_sv ILIKE ('%Sahlgrenska%')
-        AND ad.country NOT IN ('Sweden', 'Kosovo')  -- Exclude Sweden and Kosovo
+        AND ad.country NOT IN ('Sweden')  -- Exclude Sweden
     GROUP BY f.name_sv, ad.country
     ORDER BY f.name_sv, distinct_count DESC;
 """
@@ -111,7 +120,11 @@ info = folium.features.GeoJson(
 # Add mouse position plugin
 plugins.MousePosition().add_to(m)
 
+# Add title to the map
+title_html = '<h3 align="center" style="font-size:20 px"><b>Internationellt samförfattarskap Sahlgrenska akademin 2018-2022</b></h3>'
+m.get_root().html.add_child(folium.Element(title_html))
+
 # Save the map as an HTML file or display it
-map_filename = 'Sahlgrenska_2018_2022_Exclude_Sweden_Kosovo.html'
+map_filename = 'Sahlgrenska_akademin_2018_2022_Exclude_Sweden.html'
 m.save(map_filename)
 print(f"Map saved as {map_filename}")
