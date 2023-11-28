@@ -7,11 +7,11 @@ from IPython.display import display  # Import the display function
 from folium import plugins
 
 # Your PostgreSQL connection details
-dbname = 'bibmet'
-user = 'bibmetuser'
-password = 'MildaMakaroner'
-host = 'metrics.ub.gu.se'
-port = '5432'
+dbname = '-'
+user = '-'
+password = '-'
+host = '-'
+port = '-'
 
 # SQL Query to fetch data (excluding Sweden and Kosovo)
 sql_query = """
