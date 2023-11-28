@@ -1,0 +1,130 @@
+# Importing necessary libraries
+import pandas as pd
+import geopandas as gpd
+import folium
+import psycopg2
+from IPython.display import display  # Import the display function
+from folium import plugins
+
+# Your PostgreSQL connection details
+dbname = '-'
+user = '-'
+password = '-'
+host = '-'
+port = '-'
+
+# SQL Query to fetch data (excluding Sweden and Kosovo)
+sql_query = """
+    SELECT  
+    COUNT(DISTINCT isi.isi_id) AS distinct_count,
+    CASE
+        WHEN ad.country = 'Scotland' OR ad.country = 'England' OR ad.country = 'Wales' OR ad.country = 'North Ireland' THEN 'United Kingdom'
+        WHEN ad.country = 'Sweden;' THEN 'Sweden'
+        WHEN ad.country = 'U Arab Emirates' THEN 'United Arab Emirates'
+        WHEN ad.country = 'Bosnia & Herceg' THEN 'Bosnia and Herzegovina'
+        WHEN ad.country = 'DEM REP CONGO' THEN 'Democratic Republic of the Congo'
+        WHEN ad.country = 'Cote Ivoire' THEN 'Ivory Coast'
+        WHEN ad.country = 'Dominican Rep' THEN 'Dominican Republic'
+        WHEN ad.country = 'BELARUS' THEN 'Belarus'
+        WHEN ad.country = 'Turkiye' THEN 'Turkey'
+        WHEN ad.country = 'Cent Afr Republ' THEN 'Central African Republic'
+        WHEN ad.country = 'Rep Congo' THEN 'Congo'
+        WHEN ad.country = 'Guinea Bissau' THEN 'Guinea-Bissau'
+        WHEN ad.country = 'St Lucia' THEN 'Saint Lucia'
+        WHEN ad.country = 'Equat Guinea' THEN 'Equatorial Guinea'
+        WHEN ad.country = 'Papua N Guinea' THEN 'Papua New Guinea'
+        WHEN ad.country = 'Trinidad Tobago' THEN 'Trinidad and Tobago'
+        WHEN ad.country = 'USA' THEN 'United States of America'
+        WHEN ad.country = 'Czech Republic' THEN 'Czechia'
+        WHEN ad.country = 'Bosnia and Herzegovina' THEN 'Bosnia and Herz.'
+        WHEN ad.country = 'Central African Republic' THEN 'Central African Rep.'
+        WHEN ad.country = 'Democratic Republic of the Congo' THEN 'Dem. Rep. Congo'
+        WHEN ad.country = 'Dominican Republic' THEN 'Dominican Rep.'
+        WHEN ad.country = 'Equatorial Guinea' THEN 'Eq. Guinea'
+        WHEN ad.country = 'Eswatini' THEN 'eSwatini'
+        WHEN ad.country = 'Ivory Coast' THEN 'Côte d''Ivoire' -- Escape the single quote
+        WHEN ad.country = 'Solomon Islands' THEN 'Solomon Is.'
+        WHEN ad.country = 'South Sudan' THEN 'S. Sudan'
+        -- Add more country mappings as needed
+        ELSE ad.country
+    END AS country
+    FROM publications p
+    JOIN publication_versions pv ON pv.id = p.current_version_id
+    JOIN people2publications p2p ON p2p.publication_version_id = pv.id
+    JOIN people pe ON pe.id = p2p.person_id
+    JOIN departments2people2publications d2p2p ON d2p2p.people2publication_id = p2p.id
+    JOIN departments d ON d.id = d2p2p.department_id
+    JOIN faculties f ON f.id = d.faculty_id
+    JOIN "cross".gup2ext c ON c.pubid = p.id
+    JOIN extra.isi_main isi ON isi.isi_id = c.isi_id 
+    JOIN extra.isi_address ad ON ad.isi_id = isi.isi_id
+    WHERE p.deleted_at IS NULL
+        AND p.published_at IS NOT NULL
+        AND isi.py_field IN ('2018', '2019', '2020', '2021', '2022')
+        AND f.name_sv = 'IT-fakulteten'
+        AND ad.country NOT IN ('Sweden')  -- Exclude Sweden
+    GROUP BY f.name_sv, ad.country
+    ORDER BY f.name_sv, distinct_count DESC;
+"""
+
+# Import data from PostgreSQL
+with psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port) as conn:
+    df = pd.read_sql(sql_query, conn)
+
+# Displaying the first 20 lines of the dataframe using display
+display(df.head(20).reset_index(drop=True))  # Resetting index to start from 1
+
+# Load the world GeoDataFrame directly from Natural Earth data
+world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+# Create a GeoDataFrame with countries from the world GeoDataFrame
+countries_geo = world[['name', 'geometry']]
+
+# Merge df with countries_geo to ensure correct mapping
+merged_data = pd.merge(countries_geo, df, how='left', left_on='name', right_on='country')
+
+# Filter out null values
+merged_data = merged_data.dropna(subset=['distinct_count'])
+
+# Create a Folium map centered at the mean coordinates
+m = folium.Map(location=[0, 0], zoom_start=2, tiles='cartodbpositron')
+
+# Add choropleth layer to the map
+folium.Choropleth(
+    geo_data=merged_data,
+    name='choropleth',
+    data=merged_data,
+    columns=['name', 'distinct_count'],
+    key_on='properties.name',
+    fill_color='YlGnBu',
+    fill_opacity=0.7
+).add_to(m)
+
+# Add a hover effect to display information about the country
+style_function = lambda x: {'fillColor': '#ffffff', 'color': '#000000', 'fillOpacity': 0.1, 'weight': 0.1}
+highlight_function = lambda x: {'fillColor': '#000000', 'color': '#000000', 'fillOpacity': 0.50, 'weight': 0.1}
+
+info = folium.features.GeoJson(
+    merged_data,
+    style_function=style_function,
+    control=False,
+    highlight_function=highlight_function,
+    tooltip=folium.features.GeoJsonTooltip(
+        fields=['name', 'distinct_count'],
+        aliases=['Country:', 'Distinct Count:'],
+        localize=True,
+        sticky=True,
+    )
+).add_to(m)
+
+# Add mouse position plugin
+plugins.MousePosition().add_to(m)
+
+# Add title to the map
+title_html = '<h3 align="center" style="font-size:20 px"><b>Internationellt samförfattarskap IT-fakulteten 2018-2022</b></h3>'
+m.get_root().html.add_child(folium.Element(title_html))
+
+# Save the map as an HTML file or display it
+map_filename = 'IT-fakulteten_2018_2022_Exclude_Sweden.html'
+m.save(map_filename)
+print(f"Map saved as {map_filename}")
