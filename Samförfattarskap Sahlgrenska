@@ -8,7 +8,7 @@ from folium import plugins
 
 # Your PostgreSQL connection details
 dbname = '-'
-user = 'bibmetuser'
+user = '-'
 password = '-'
 host = '-'
 port = '-'
