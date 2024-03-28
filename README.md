@@ -1,8 +1,8 @@
 # Bibliometri_GU
 Kod för att ta ut data (från bibmet) och göra bibliometriska analyser av GU:s publikationsdata
 
-# SQL-exempel query för att ta ut underlag till bibmetdata_to_bibtex.ipynb
---för att skapa publikationslista baserat på pe.id--
+**SQL-exempel query för att ta ut underlag till bibmetdata_to_bibtex.ipynb**
+~~~ --för att skapa publikationslista baserat på pe.id--
 SELECT subquery.id,
        STRING_AGG(subquery.author_name, '; ') as author,
        subquery.pubyear, subquery.title, subquery.sourcetitle, subquery.sourcevolume, subquery.sourceissue, subquery.sourcepages, subquery.identifier_value AS doi
@@ -28,4 +28,4 @@ FROM (
     AND pi.identifier_code='doi'
 ) subquery
 WHERE subquery.author_name IS NOT NULL
-GROUP BY subquery.id, subquery.pubyear, subquery.title, subquery.sourcetitle, subquery.sourcevolume, subquery.sourceissue, subquery.sourcepages, subquery.identifier_value
+GROUP BY subquery.id, subquery.pubyear, subquery.title, subquery.sourcetitle, subquery.sourcevolume, subquery.sourceissue, subquery.sourcepages, subquery.identifier_value ~~~
